@@ -18,7 +18,7 @@ class UtilsTest(TestCase):
         """test: function format_date should return correct datetime"""
 
         result = parse_apache_string(self.log_string)
-        mock_date = datetime()
+        mock_date = datetime(year=2018, month=12, day=31)
         self.assertIn("time", result)
 
         self.assertEqual(type(format_date(result["time"])), type(mock_date))
