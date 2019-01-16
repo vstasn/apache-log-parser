@@ -1,0 +1,57 @@
+{% if total_size %}
+<table class="table table-striped">
+  <tr>
+    <td>Total size</td>
+    <td>{{ total_size }}</td>
+  </tr>
+  <tr>
+    <td>Total unique IP</td>
+    <td>{{ total_ip_count }}</td>
+  </tr>
+</table>
+{% endif %}
+
+{% if total_ip_top10 %}
+<table class="table table-striped">
+ <thead>
+    <tr>
+      <td> The most frequent IPs </td>
+    </tr>
+    <tr>
+      <td> IP </td>
+      <td> Count </td>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in total_ip_top10 %}
+        <tr>
+          <td>{{ row.ip }}</td>
+          <td>{{ row.ip_count }}</td>
+        </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+{% if total_methods_top %}
+<table class="table table-striped">
+ <thead>
+    <tr>
+      <td> Http methods count </td>
+    </tr>
+    <tr>
+      <td> Method </td>
+      <td> Count </td>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in total_methods_top %}
+        <tr>
+          <td>{{ row.request_method }}</td>
+          <td>{{ row.method_count }}</td>
+        </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endif %}

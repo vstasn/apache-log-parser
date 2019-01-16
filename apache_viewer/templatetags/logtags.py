@@ -7,7 +7,7 @@ register = template.Library()
 
 @register.simple_tag(takes_context=True)
 def url_replace(context, **kwargs):
-    query = context['request'].GET.copy()
+    query = context["request"].GET.copy()
 
     for kwarg in kwargs:
         try:

@@ -1,9 +1,8 @@
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from apache_viewer.models import Logs
-from apache_viewer.utils import parse_apache_string, format_date
+from apache_viewer.utils import parse_apache_string
 from tqdm import tqdm
-from itertools import islice
 import requests
 import math
 import os
@@ -24,14 +23,13 @@ class Command(BaseCommand):
         filename = self._downdloan_file(url)
 
         if self._process_file(filename):
-            #os.remove(filename)
-            pass
+            os.remove(filename)
 
     def _downdloan_file(self, url):
         local_filename = settings.LOG_DATA_FOLDER + url.split("/")[-1]
         print(local_filename)
         if not os.path.isfile(local_filename):
-            self.stdout.write("Downdloading file \"%s\" " % url)
+            self.stdout.write('Downdloading file "%s" ' % url)
 
             response = requests.get(url, stream=True)
             # show progressbar
@@ -52,7 +50,7 @@ class Command(BaseCommand):
 
     def _process_file(self, file):
         with open(file, "r") as handle:
-            self.stdout.write("Processing file \"%s\" " % file)
+            self.stdout.write('Processing file "%s" ' % file)
 
             fl_content = handle.read().splitlines()
             total_lines = len(fl_content)
@@ -69,22 +67,15 @@ class Command(BaseCommand):
         Collect all rows to bulks
         """
         try:
-            log_entry = Logs()
-            log_entry.ip = log["ip"]
-            log_entry.tms = format_date(log["time"])
-            log_entry.request_method = log["request_method"]
-            log_entry.request_uri = log["path"]
-            log_entry.request_code = int(log["status"])
-            log_entry.request_size = int(log["bytes"])
-
-            self.bulks.append(log_entry)
+            add_bulk = Logs.objects.add_log_bulk(log)
+            if add_bulk:
+                self.bulks.append(add_bulk)
         except ValueError:
             pass
 
     def _bulk_insert(self):
         """
-        Function insert rows to DB
+        Insert rows to DB by create_bulk
         """
         self.stdout.write("Inserting")
-        batch_size = 1000
-        Logs.objects.bulk_create(self.bulks, batch_size)
+        Logs.objects.create_logs_bulk(self.bulks)

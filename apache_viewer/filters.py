@@ -2,7 +2,8 @@ import django_filters
 from .models import Logs
 
 
-class ViewFilter(django_filters.FilterSet):
+class ApacheLogFilter(django_filters.FilterSet):
+
     class Meta:
         model = Logs
         fields = [

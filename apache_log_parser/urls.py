@@ -17,5 +17,5 @@ from django.conf.urls import url
 from apache_viewer import views as apache_views
 
 urlpatterns = [
-    url(r"^$", apache_views.LogsList.as_view(), {"page": 1}, name="home"),
+    url(r"^$", apache_views.LogsList.as_view(), name="home"),
 ]

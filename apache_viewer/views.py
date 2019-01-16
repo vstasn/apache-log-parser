@@ -1,40 +1,68 @@
 from django.db.models import Sum, Count
-from django_filters.views import FilterView
+from django_filters.views import BaseFilterView
+from django.views.generic import ListView
 from apache_viewer.models import Logs
-from .filters import ViewFilter
+from .filters import ApacheLogFilter
+import csv
+from django.http import HttpResponse
 
 
-class LogsList(FilterView):
+def export_csv_file(queryset):
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = "attachment;filename=export.csv"
+    field_names = [field.name for field in queryset.model._meta.fields]
+
+    writer = csv.writer(response)
+    writer.writerow(field_names)
+    for row in queryset:
+        writer.writerow([getattr(row, field) for field in field_names])
+    return response
+
+
+class LogsList(BaseFilterView, ListView):
     model = Logs
-    paginate_by = 100
+    paginate_by = 20
     template_name = "logs_list.html"
-
-    filter_class = ViewFilter
+    filter_class = ApacheLogFilter
+    # on startup filter is None, show all data
+    strict = False
 
     def paginate_queryset(self, queryset, page_size):
-        self.result_total_size = queryset.aggregate(total_size=Sum("request_size"))[
+        self.total_size = queryset.aggregate(total_size=Sum("request_size"))[
             "total_size"
         ]
-        self.result_ip_unique_count = queryset.aggregate(
-            ip_unique_count=Count("ip", distinct=True)
-        )["ip_unique_count"]
-        self.result_ip_top_10 = (
+        self.total_ip_count = queryset.aggregate(
+            total_ip_count=Count("ip", distinct=True)
+        )["total_ip_count"]
+        self.total_ip_top10 = (
             queryset.values("ip")
             .annotate(ip_count=Count("ip"))
             .order_by("-ip_count")[:10]
         )
-        self.result_methods_top = (
+        self.total_methods_top = (
             queryset.values("request_method")
             .annotate(method_count=Count("request_method"))
             .order_by("-method_count")
         )
+
         return super().paginate_queryset(queryset, page_size)
+
+    def get(self, request, *args, **kwargs):
+        response = super().get(self, request, *args, **kwargs)
+
+        format = self.request.GET.get("format", False)
+
+        # url/?format=csv
+        if format == "csv":
+            return export_csv_file(self.object_list)
+
+        return response
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # add aggregated data
-        context["total_size"] = self.result_total_size
-        context["ip_unique_count"] = self.result_ip_unique_count
-        context["ip_top_10"] = self.result_ip_top_10
-        context["methods_top"] = self.result_methods_top
+        context["total_size"] = self.total_size
+        context["total_ip_count"] = self.total_ip_count
+        context["total_ip_top10"] = self.total_ip_top10
+        context["total_methods_top"] = self.total_methods_top
         return context

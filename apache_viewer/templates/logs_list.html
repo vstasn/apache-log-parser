@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load logtags %}
 
 {% block table %}
 {% block content %}
@@ -9,13 +8,17 @@
         {{ filter.form.as_p }}
         <button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-search" aria-hidden="true"></span> Search</button>
     </form>
+    <form action="" method="get">
+        <input type="hidden" name="format" value="csv">
+        <button class="btn btn-default" type="submit"><span class="glyphicon" aria-hidden="true"></span> Export</button>
+    </form>
   </thead>
   <tbody>
     {% for row in object_list %}
       <tr>
         <td>{{ row.ip }}</td>
         <td>{{ row.tms|date }}</td>
-        <td>{{ row.request_method }}</td>
+        <td>{{ row.get_request_method_display }}</td>
         <td>{{ row.request_uri }}</td>
         <td>{{ row.request_code }}</td>
         <td>{{ row.request_size }}</td>
@@ -25,75 +28,8 @@
 </table>
 {% endblock %}
 
+{% include "logs_pagination.html" %}
 
+{% include "logs_total.html" %}
 
-<nav aria-label="Page navigation example">
-  <ul class="pagination">
-    {% if page_obj.has_previous %}
-        <li class="page-item"><a class="page-link" href="?{% url_replace page=1 %}">First</a></li>
-        <li class="page-item"><a class="page-link" href="?{% url_replace page=page_obj.previous_page_number %}">Previous</a></li>
-    {% endif %}
-    <li class="page-item active">
-      <a class="page-link" href="#">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}. <span class="sr-only">(current)</span></a>
-    </li>
-    {% if page_obj.has_next %}
-        <li class="page-item"><a class="page-link" href="?{% url_replace page=page_obj.next_page_number %}">Next</a></li>
-        <li class="page-item"><a class="page-link" href="?{% url_replace page=page_obj.paginator.num_pages %}">Last</a></li>
-    {% endif %}
-  </ul>
-</nav>
-
-{% if total_size %}
-<table class="table table-striped">
-  <tr>
-    <td>Total size</td>
-    <td>{{ total_size }}</td>
-  </tr>
-  <tr>
-    <td>Total unique IP</td>
-    <td>{{ ip_unique_count }}</td>
-  </tr>
-</table>
-
-<table class="table table-striped">
- <thead>
-    <tr>
-      <td> The most frequent IPs </td>
-    </tr>
-    <tr>
-      <td> IP </td>
-      <td> Count </td>
-    </tr>
-  </thead>
-  <tbody>
-    {% for row in ip_top_10 %}
-        <tr>
-          <td>{{ row.ip }}</td>
-          <td>{{ row.ip_count }}</td>
-        </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-<table class="table table-striped">
- <thead>
-    <tr>
-      <td> Http methods count </td>
-    </tr>
-    <tr>
-      <td> Method </td>
-      <td> Count </td>
-    </tr>
-  </thead>
-  <tbody>
-    {% for row in methods_top %}
-        <tr>
-          <td>{{ row.request_method }}</td>
-          <td>{{ row.method_count }}</td>
-        </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-{% endif %}
 {% endblock table %}
