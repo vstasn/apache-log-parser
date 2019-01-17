@@ -3,6 +3,7 @@ from django.conf import settings
 from apache_viewer.models import Logs
 from apache_viewer.utils import parse_apache_string
 from tqdm import tqdm
+from itertools import islice
 import requests
 import math
 import os
@@ -78,4 +79,15 @@ class Command(BaseCommand):
         Insert rows to DB by create_bulk
         """
         self.stdout.write("Inserting")
-        Logs.objects.create_logs_bulk(self.bulks)
+
+        batch_size = 10000
+        objs = tuple(self.bulks)
+        total = len(objs)
+        pbar = tqdm(total=total)
+
+        while True:
+            batch = list(islice(objs, batch_size))
+            if not batch:
+                break
+            Logs.objects.bulk_create(batch, batch_size, ignore_conflicts=True)
+            pbar.update(len(batch))

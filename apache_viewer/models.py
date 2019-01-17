@@ -22,9 +22,6 @@ class LogsManager(models.Manager):
     add methods to model
     """
 
-    def create_logs_bulk(self, objects, batch_size=1000):
-        return Logs.objects.bulk_create(objects, batch_size)
-
     def add_log_bulk(self, data):
         http_method = data["request_method"].lower()
         if http_method not in dict(REQUEST_METHODS_CHOICES):

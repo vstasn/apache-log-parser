@@ -1,4 +1,4 @@
-Django==2.1.5
+Django==2.2a1
 pytz==2018.9
 tqdm==4.29.1
 requests==2.21.0
