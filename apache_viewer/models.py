@@ -88,3 +88,4 @@ class Logs(models.Model):
             models.Index(fields=["request_code"]),
             models.Index(fields=["request_size"]),
         ]
+        verbose_name = "logs"
