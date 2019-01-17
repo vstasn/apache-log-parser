@@ -1,4 +1,3 @@
-from django.db.models import Sum, Count
 from django_filters.views import BaseFilterView
 from django.views.generic import ListView
 from apache_viewer.models import Logs
@@ -28,22 +27,10 @@ class LogsList(BaseFilterView, ListView):
     strict = False
 
     def paginate_queryset(self, queryset, page_size):
-        self.total_size = queryset.aggregate(total_size=Sum("request_size"))[
-            "total_size"
-        ]
-        self.total_ip_count = queryset.aggregate(
-            total_ip_count=Count("ip", distinct=True)
-        )["total_ip_count"]
-        self.total_ip_top10 = (
-            queryset.values("ip")
-            .annotate(ip_count=Count("ip"))
-            .order_by("-ip_count")[:10]
-        )
-        self.total_methods_top = (
-            queryset.values("request_method")
-            .annotate(method_count=Count("request_method"))
-            .order_by("-method_count")
-        )
+        self.total_size = queryset.total_size()
+        self.total_ip_count = queryset.count_unique_ips()
+        self.total_ip_top10 = queryset.summary_ips_count()[:10]
+        self.total_methods_top = queryset.summary_methods_count()
 
         return super().paginate_queryset(queryset, page_size)
 

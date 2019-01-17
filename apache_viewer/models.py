@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import validate_ipv46_address
 from apache_viewer.utils import format_date
+from django.db.models import Sum, Count
 
 
 REQUEST_METHODS_CHOICES = (
@@ -40,12 +41,36 @@ class LogsManager(models.Manager):
         return log_entry
 
 
+class AggregateQuerySet(models.QuerySet):
+    def total_size(self):
+        """ Total size of all log requests"""
+        return self.aggregate(total_size=Sum("request_size")).get("total_size", 0)
+
+    def count_unique_ips(self):
+        """ Get all unique IP """
+        return self.aggregate(total_ip_count=Count("ip", distinct=True)).get(
+            "total_ip_count", 0
+        )
+
+    def summary_ips_count(self):
+        """ Group by IP and count """
+        return self.values("ip").annotate(ip_count=Count("ip")).order_by("-ip_count")
+
+    def summary_methods_count(self):
+        """ Group by HTTP methods and count """
+        return (
+            self.values("request_method")
+            .annotate(method_count=Count("request_method"))
+            .order_by("-method_count")
+        )
+
+
 class Logs(models.Model):
     """
     Logs models
     """
 
-    objects = LogsManager()
+    objects = LogsManager.from_queryset(AggregateQuerySet)()
 
     ip = models.CharField(
         max_length=40, validators=[validate_ipv46_address], db_index=True
